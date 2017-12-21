@@ -1,0 +1,12 @@
+{
+    "name": "webgizmo/webgizmo",
+    "description": "Semi-static website generator",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Alexander Whillas",
+            "email": "whillas@gmail.com"
+        }
+    ],
+    "require": {}
+}
