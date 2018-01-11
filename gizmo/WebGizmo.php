@@ -18,41 +18,44 @@ class WebGizmo
 	private $content;
 	// Requested content virtual path from query param.
 	private $virtual_path;
-	// Output format
-	private $format;
+	/**
+	 * Renderable of the content AST
+	 */
+	private $renderable;
 
 	// constructor
 	public function __construct(
-		ContentAbstractFactory $content_source = null,
+		ContentFactory $content_source = null,
+		RenderableFactory $renderable_factory = null,
 		$multi_lingual = false,
-		$language = 'en',
-		$theme = 'bootstrap4' // TODO: move to TemplateRenderer::__construct()
+		$language = 'en'
 	) {
 		$this->root_dir = dirname($_SERVER['SCRIPT_FILENAME']);
 
 		$source = ($content_source ? $content_source : new LocalFileSystemContent());
 
+		$renderable_factory = ($renderable_factory
+			? $renderable_factory
+			: new DefaultRenderableFactory()
+		);
+		$this->renderable = $renderable_factory->getRenderable($this, $this->getMediaType());
+
 		parse_str($_SERVER['QUERY_STRING'], $query);
 		$this->virtual_path = $query['p'];
 
 		$this->content = $source->getAbstractContentTree();
-
-		$this->template = $this->getTemplateEngine($theme);
 	}
 
-	// TODO: move this to HTML Renderer as it only relates template renderers
-	private function getTemplateEngine($theme_name) {
-		$templates_dir = folder([$this->root_dir, 'themes', $theme_name]);
-		$config = \json_decode(file_get_contents(folder([$templates_dir, 'config.json'])));
-		$EngineName = "gizmo\\$config->engine";
-		return new $EngineName($templates_dir);
+	public function getRoot()
+	{
+		return $this->root_dir;
 	}
 
 	/**
 	 * Content negotiation.
 	 * @see  http://williamdurand.fr/Negotiation/
 	 */
-	private function getMediaType() {
+	public function getMediaType() {
 		$negotiator = new \Negotiation\Negotiator();
 		// TODO: make $priorities configurable
 		$priorities   = array('text/html', 'application/json', 'application/xml;q=0.5');
@@ -62,22 +65,9 @@ class WebGizmo
 	}
 
 	/**
-	 * Factory method to get the content renderer (Visitor pattrn) class
-	 */
-	private function getRenderer() {
-		// TODO: inject this as a method on a factory class
-		switch($this->getMediaType()) {
-			case 'application/json':
-			case 'text/html':
-			default:
-				return new HtmlRender($this->virtual_path);
-		}
-	}
-
-	/**
 	 * @see  http://williamdurand.fr/Negotiation/
 	 */
-	private function getBestLanguage() {
+	public function getBestLanguage() {
 		$negotiator = new \Negotiation\LanguageNegotiator();
 		// TODO: make $priorities configurable
 		$priorities = array('en-au', 'en-gb', 'en');
@@ -87,15 +77,7 @@ class WebGizmo
 	}
 
 	public function render() {
-		$out = '';
-		$r = $this->getRenderer();
-		$content = $r->render($this->content);
-		$out .= $this->template->render('default', [
-			'title' => 'Website title here',
-			'content' => $content
-		]);
-
-		return $out;
+		return $this->renderable->render($this->content, $this->virtual_path);
 	}
 }
 ?>

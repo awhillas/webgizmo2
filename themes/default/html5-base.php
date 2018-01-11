@@ -11,10 +11,16 @@
     <?php $this->insert('partials/css') ?>
   </head>
   <body>
-    <?php $this->insert('partials/header') ?>
+    <header>
+      <?php $this->insert('partials/header') ?>
+    </header>
 
-    <?=$this->section('content')?>
+    <main>
+      <?=$this->section('content')?>
+    </main>
 
-    <?php $this->insert('partials/footer') ?>
+    <footer>
+      <?php $this->insert('partials/footer') ?>
+    </footer>
   </body>
 </html>

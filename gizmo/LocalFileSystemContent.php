@@ -4,18 +4,18 @@ namespace gizmo;
 /**
  * Local File System abstract factory
  */
-class LocalFileSystemContent implements ContentAbstractFactory
+class LocalFileSystemContent implements ContentFactory
 {
 	public function getAbstractContentTree($path = NULL) {
 		$default = dirname($_SERVER['SCRIPT_FILENAME']) . DIRECTORY_SEPARATOR . 'content';
-		return new LocalFSDir(($path ? $path : $default));
+		return new FSDir(($path ? $path : $default));
 	}
 }
 
 /**
  * Abstract General Local FS Object
  */
-class LocalFSObject implements FSObject
+abstract class FSObject implements ContentObject
 {
 	protected $path;
 
@@ -29,14 +29,29 @@ class LocalFSObject implements FSObject
 		}
 	}
 
-	public function getPath() { return $this->path; }
+	abstract public function accept(ContentRenderable $renderable);
+
+	public function getPath()
+	{
+		return $this->path;
+	}
+
+	public function getVirtualUrl()
+	{
+		return ''; // TODO: convert real (ugly) file name to virtual filename.
+	}
+
+	public function getDirectUrl()
+	{
+		return ''; // TODO: add '/content' directory and use ugly name.
+	}
 }
 
 
 /**
  * Local Directory
  */
-class LocalFSDir extends LocalFSObject implements FSDir, \IteratorAggregate
+class FSDir extends FSObject implements ContentNode, \IteratorAggregate
 {
 	private $contents = [];
 
@@ -49,10 +64,10 @@ class LocalFSDir extends LocalFSObject implements FSDir, \IteratorAggregate
 				if($file_info->isDot()) continue;
 
 				if ($file_info->isDir()) {
-					$this->contents[$file_info->getFilename()] = new LocalFSDir($file_info->getPath());
+					$this->contents[$file_info->getFilename()] = new FSDir($file_info->getPath());
 				}
 				else {
-					$this->contents[$file_info->getFilename()] = new LocalFSFile($file_info);
+					$this->contents[$file_info->getFilename()] = new FSFile($file_info);
 				}
 			}
 			// ksort($this->contents);
@@ -68,9 +83,9 @@ class LocalFSDir extends LocalFSObject implements FSDir, \IteratorAggregate
 			return new \ArrayIterator($this->contents);
 	}
 
-	public function accept(ContentRenderer $renderer)
+	public function accept(ContentRenderable $renderable)
 	{
-		return $renderer->visitDir($this);
+		return $renderable->visitDir($this);
 	}
 }
 
@@ -78,7 +93,7 @@ class LocalFSDir extends LocalFSObject implements FSDir, \IteratorAggregate
 /**
  * Local File
  */
-class LocalFSFile extends LocalFSObject implements FSFile
+class FSFile extends FSObject implements ContentLeaf
 {
 	public $info; // SplFileInfo
 
@@ -92,6 +107,11 @@ class LocalFSFile extends LocalFSObject implements FSFile
 		}
 	}
 
+	public function getPath()
+	{
+		return $this->info->getRealPath();
+	}
+
 	function getFilename() {
 		return $this->info->getFilename();
 	}
@@ -100,14 +120,14 @@ class LocalFSFile extends LocalFSObject implements FSFile
 		return $this->info->getExtension();
 	}
 
-	public function accept(ContentRenderer $renderer) {
-		return $renderer->visitFile($this);
+	public function accept(ContentRenderable $renderable) {
+		return $renderable->visitFile($this);
 	}
 
-	public function getContents() {
-		return file_get_contents($this->info->getRealPath());
+	public function getContents()
+	{
+		return file_get_contents($this->getPath());
 	}
-
 }
 
 
