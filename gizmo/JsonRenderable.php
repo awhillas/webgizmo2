@@ -19,7 +19,7 @@ class JsonRenderable extends ContentRenderable
 		}
 
 		return '{
-			"name": ' . $this->getFilename() . ',
+			"name": "' . $this->getFilename() . '",
 			"children": [
 				' . implode(',', $children) . '
 			]
@@ -28,7 +28,7 @@ class JsonRenderable extends ContentRenderable
 
 	public function visitFile(FSFile $leaf)
 	{
-		return "{ name: $this->getFilename() }"
+		return '{ "name": "' . $this->getFilename() . '" }';
 	}
 }
 

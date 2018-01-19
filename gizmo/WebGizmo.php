@@ -1,15 +1,12 @@
 <?php
 namespace gizmo;
 
-function dump($var) {
-	echo '<pre>';
-	var_dump($var);
-	echo '</pre>';
-};
+require_once('utils.php');
 
-function folder($array) {
-	return implode(DIRECTORY_SEPARATOR, $array);
-}
+// TODO: rethink the language handling
+if (!defined('GIZMO_LANGUAGE')) define('GIZMO_LANGUAGE', 'en');
+if (!defined('GIZMO_MULTI_LINGUAL')) define('GIZMO_MULTI_LINGUAL', false);
+
 
 class WebGizmo
 {
@@ -27,12 +24,12 @@ class WebGizmo
 	public function __construct(
 		ContentFactory $content_source = null,
 		RenderableFactory $renderable_factory = null,
-		$multi_lingual = false,
-		$language = 'en'
+		$multi_lingual = GIZMO_MULTI_LINGUAL,
+		$language = GIZMO_LANGUAGE
 	) {
 		$this->root_dir = dirname($_SERVER['SCRIPT_FILENAME']);
 
-		$source = ($content_source ? $content_source : new LocalFileSystemContent());
+		$source = ($content_source ? $content_source : new FileSystemContent());
 
 		$renderable_factory = ($renderable_factory
 			? $renderable_factory

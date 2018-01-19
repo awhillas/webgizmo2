@@ -1,6 +1,60 @@
 <?php
 namespace gizmo;
 
+use json_decode;
+
+if (!defined('GIZMO_THEME')) define('GIZMO_THEME', 'default');
+if (!defined('GIZMO_WEBSITE_TITLE')) define('GIZMO_WEBSITE_TITLE', 'Untitled website');
+
+/**
+ * Theme manager/wrapper
+ */
+class Theme
+{
+	public $name;
+	public $dir;
+	public $config;
+	public $root;
+
+	function __construct($theme_name, $root_dir)
+	{
+		$this->name = $theme_name;
+		$this->root = $root_dir;
+		$this->dir = folder([$root_dir, 'themes', $theme_name]);
+		$this->config = $this->getConfig();
+	}
+
+	private function getConfig()
+	{
+		$theme_config_file = folder([$this->dir, 'config.json']);
+		if (file_exists($this->dir) and file_exists($theme_config_file))
+			return json_decode(file_get_contents($theme_config_file));
+		else {
+			return false;
+		}
+	}
+
+	// private function getFolders($theme_name)
+	// {
+	// 	$theme = new Theme($theme_name, $this->root);
+	// 	if($theme->config){
+	// 		$out = [$theme->name => $theme->dir];
+	// 		if (property_exists($theme->config, 'parent_theme')) {
+	// 			return array_merge($out, $this->getFolders($theme->config->parent_theme));
+	// 		}
+	// 		return $out;
+	// 	}
+	// 	return [];
+	// }
+
+	public function getEngine()
+	{
+		$EngineName = 'gizmo\\' . $this->config->engine;
+		return new $EngineName($this->dir);
+	}
+}
+
+
 /**
  * HTML Content Renderable
  *
@@ -13,7 +67,7 @@ class HtmlRenderable implements ContentRenderable
 	private $gizmo;
 	private $template_engine;
 
-	function __construct(WebGizmo $gizmo, $theme_name = 'default')
+	function __construct(WebGizmo $gizmo, $theme_name = GIZMO_THEME)
 	{
 		$this->gizmo = $gizmo;
 		$this->template_engine = $this->getTemplateEngine($theme_name);
@@ -21,46 +75,54 @@ class HtmlRenderable implements ContentRenderable
 
 	private function getTemplateEngine($theme_name)
 	{
-		$templates_dir = folder([$this->gizmo->getRoot(), 'themes', $theme_name]);
-		$config = \json_decode(file_get_contents(folder([$templates_dir, 'config.json'])));
-		$EngineName = "gizmo\\$config->engine";
-		return new $EngineName($templates_dir, $config);
+		$theme = new Theme($theme_name, $this->gizmo->getRoot());
+		return $theme->getEngine();
 	}
 
-	public function render(FSDir $root_node, $virtual_path = '')
+	public function render(FSDir $root_node)
 	{
-		if (!is_string($virtual_path))
-			throw new \Exception('Virtual path must be a string', 1);
 		$content = $this->visitDir($root_node);
 		$what = [
 			'content' => $content,
-			'title' => 'WebGizmo default theme', // from file name + site config?
+			'title' => GIZMO_WEBSITE_TITLE, // TODO: from file name + site config?
 			'language' => $this->gizmo->getBestLanguage(),
 		];
+
 		return $this->template_engine->render('default', $what);
 	}
 
 	public function visitDir(FSDir $node)
 	{
-		$out = '';
-		// $out = '<p>FSDir:' . $node->getPath() . '</p>';
-		// Children
+		$extension = $node->getExtension();
+		$children = [];
+
+		// Bulid up an array of rendered child nodes.
 		foreach($node as $file_name => $sub_node)
-		{
-			$out .= $sub_node->accept($this);  // Recurse
+			if ($sub_node->getExtension())
+				array_push($children, $sub_node->accept($this));  // Recurse
+
+		$context = array(
+			'content' => $node,
+			'children' => $children
+		);
+		// Use speical extension handler if one exists. Number are for columns (or are they?)
+		$partial_template = 'partials/' . $extension;
+		if ($extension and $this->template_engine->canHandle($partial_template)) {
+			return $this->template_engine->render($partial_template, $context);
 		}
 
-		return $out;
+		// Default fall back
+		return $this->template_engine->render('partials/default', $context);
 	}
 
 	public function visitFile(FSFile $leaf)
 	{
-		// TODO: rewrite this switch
+		// TODO: rewrite this switch as an Abstract Factory
 		switch($leaf->getExtension()) {
 			case 'md':
 				return $this->renderMarkdown($leaf);
 			default:
-				return 'FSFile:' . $leaf->getPath() . "<strong>/" . $leaf->getFilename() . "</strong>";
+				return 'FSFile:' . $leaf->getPath() . "<strong>" . $leaf->getFilename() . "</strong>";
 		}
 	}
 

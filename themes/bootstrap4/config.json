@@ -1,4 +1,3 @@
 {
-	"engine": "PlatesTemplates",
-	"parent_theme": "defalut"
+	"engine": "Plates3Templates"
 }

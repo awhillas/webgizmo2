@@ -19,7 +19,7 @@ interface ContentRenderable
 	 * @param	string $virtual_path The vitual path to render. Optional.
 	 * @return string Content AST rendered in the specific format as a string.
 	 */
-	public function render(FSDir $root_node, $virtual_path = '');
+	public function render(FSDir $root_node);
 
 	/**
 	 * One of the Visitor pattern's required methods

@@ -1,13 +1,17 @@
 <?php
 namespace gizmo;
 
+
+if (!defined('GIZMO_CONTENT_DIR')) define('GIZMO_CONTENT_DIR', 'content');
+
+
 /**
  * Local File System abstract factory
  */
-class LocalFileSystemContent implements ContentFactory
+class FileSystemContent implements ContentFactory
 {
 	public function getAbstractContentTree($path = NULL) {
-		$default = dirname($_SERVER['SCRIPT_FILENAME']) . DIRECTORY_SEPARATOR . 'content';
+		$default = folder([dirname($_SERVER['SCRIPT_FILENAME']), GIZMO_CONTENT_DIR]);
 		return new FSDir(($path ? $path : $default));
 	}
 }
@@ -27,6 +31,11 @@ abstract class FSObject implements ContentObject
 		else {
 			throw new Exception('Path does not exist?' . $path, 1);
 		}
+	}
+
+	public function __toString()
+	{
+		return $this->path;
 	}
 
 	abstract public function accept(ContentRenderable $renderable);
@@ -62,9 +71,10 @@ class FSDir extends FSObject implements ContentNode, \IteratorAggregate
 
 			foreach (new \DirectoryIterator($this->path) as $file_info) {
 				if($file_info->isDot()) continue;
+				if($file_info->getFilename()[0] == '.') continue;
 
 				if ($file_info->isDir()) {
-					$this->contents[$file_info->getFilename()] = new FSDir($file_info->getPath());
+					$this->contents[$file_info->getFilename()] = new FSDir($file_info->getRealPath());
 				}
 				else {
 					$this->contents[$file_info->getFilename()] = new FSFile($file_info);
@@ -81,6 +91,10 @@ class FSDir extends FSObject implements ContentNode, \IteratorAggregate
 	public function getIterator()
 	{
 			return new \ArrayIterator($this->contents);
+	}
+
+	function getExtension() {
+		return \pathinfo($this->getPath(), PATHINFO_EXTENSION);
 	}
 
 	public function accept(ContentRenderable $renderable)
