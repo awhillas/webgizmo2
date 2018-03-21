@@ -105,30 +105,57 @@ class HtmlRenderable implements ContentRenderable
 			'content' => $node,
 			'children' => $children
 		);
-		// Use speical extension handler if one exists. Number are for columns (or are they?)
-		$partial_template = 'partials/' . $extension;
-		if ($extension and $this->template_engine->canHandle($partial_template)) {
-			return $this->template_engine->render($partial_template, $context);
-		}
-
-		// Default fall back
-		return $this->template_engine->render('partials/default', $context);
+		// Use speical extension handler if one exists + default fall backs.
+		$partial_templates = [
+			'partials/' . $extension,
+			'partials/default-folder',
+			'partials/default'
+		];
+		return $this->renderTemplateIfExists($partial_templates, $context);
 	}
 
 	public function visitFile(FSFile $leaf)
 	{
 		// TODO: rewrite this switch as an Abstract Factory
 		switch($leaf->getExtension()) {
+			case 'html':
+				return $this->renderHtml($leaf);
 			case 'md':
 				return $this->renderMarkdown($leaf);
+			case 'jpg':
+			case 'jpeg':
+			case 'gif':
+			case 'png':
+				return $this->renderImage($leaf);
 			default:
 				return 'FSFile:' . $leaf->getPath() . "<strong>" . $leaf->getFilename() . "</strong>";
 		}
+	}
+
+	private function renderTemplateIfExists($partial_templates, $context = [])
+	{
+		foreach ($partial_templates as $template)
+			if ($this->template_engine->canHandle($template))
+				return $this->template_engine->render($template, $context);
+		return false;
 	}
 
 	private function renderMarkdown($file)
 	{
 		return \Parsedown::instance()->text($file->getContents());
 	}
+
+	private function renderImage($file)
+	{
+		if ($html = $this->renderTemplateIfExists(['partials/image'], [ 'file' => $file ])) return $html;
+		# Fall back to vanilla img tag
+		return '<img src="'.$file->getDirectUrl().'" alt="'.$file->getCleanFilename().'" class="WG__default_image" />';
+	}
+
+	private function renderHtml($file)
+	{
+		return $file->getContents();
+	}
+
 }
 ?>

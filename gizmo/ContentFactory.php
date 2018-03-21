@@ -8,4 +8,5 @@ interface ContentFactory
 {
 	public function getAbstractContentTree($path); // : ContentObject;
 }
- ?>
+
+?>

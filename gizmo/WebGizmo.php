@@ -1,15 +1,22 @@
 <?php
 namespace gizmo;
 
+use Exception;
+
+
 require_once('utils.php');
 
 // TODO: rethink the language handling
 if (!defined('GIZMO_LANGUAGE')) define('GIZMO_LANGUAGE', 'en');
 if (!defined('GIZMO_MULTI_LINGUAL')) define('GIZMO_MULTI_LINGUAL', false);
 
+class NotFoundException extends Exception { }
 
 class WebGizmo
 {
+	// Hold an instance of the class
+	private static $instance;
+
 	private $root_dir;
 	// Content Iterator
 	private $content;
@@ -31,16 +38,37 @@ class WebGizmo
 
 		$source = ($content_source ? $content_source : new FileSystemContent());
 
-		$renderable_factory = ($renderable_factory
+		$renderable_factory = $renderable_factory
 			? $renderable_factory
 			: new DefaultRenderableFactory()
-		);
+		;
 		$this->renderable = $renderable_factory->getRenderable($this, $this->getMediaType());
 
 		parse_str($_SERVER['QUERY_STRING'], $query);
-		$this->virtual_path = $query['p'];
+		$this->virtual_path = array_key_exists('p', $query) ? $query['p'] : '';
 
-		$this->content = $source->getAbstractContentTree();
+		// TODO: handle 404s i.e. create a 
+		try {
+			$this->content = $source->getAbstractContentTree($this->virtual_path);
+		} catch (gizmo\NotFoundException $e) {
+			return '<h1>404 :(</h1>' . $e->getMessage();
+		}
+
+		self::$instance = $this;
+	}
+
+	/**
+	 * The singleton method
+	 * We're not a real Singelton as we don't instanciate if instane is not set.
+	 * We assume that WebGizmo is the first object to get instanciated and 
+	 * handles this in the __construct().
+	 */
+	public static function singleton()
+	{
+		// if (!isset(self::$instance)) {
+		// 	self::$instance = new __CLASS__;
+		// }
+		return self::$instance;
 	}
 
 	public function getRoot()
@@ -54,7 +82,7 @@ class WebGizmo
 	 */
 	public function getMediaType() {
 		$negotiator = new \Negotiation\Negotiator();
-		// TODO: make $priorities configurable
+		// TODO: make MediaType $priorities configurable
 		$priorities   = array('text/html', 'application/json', 'application/xml;q=0.5');
 		$mediaType = $negotiator->getBest($_SERVER['HTTP_ACCEPT'], $priorities);
 
@@ -66,7 +94,7 @@ class WebGizmo
 	 */
 	public function getBestLanguage() {
 		$negotiator = new \Negotiation\LanguageNegotiator();
-		// TODO: make $priorities configurable
+		// TODO: make Language $priorities configurable
 		$priorities = array('en-au', 'en-gb', 'en');
 		$bestLanguage = $negotiator->getBest($_SERVER['HTTP_ACCEPT_LANGUAGE'], $priorities);
 

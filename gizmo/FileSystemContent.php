@@ -1,6 +1,9 @@
 <?php
 namespace gizmo;
 
+use pathinfo;
+use Exception;
+
 
 if (!defined('GIZMO_CONTENT_DIR')) define('GIZMO_CONTENT_DIR', 'content');
 
@@ -10,9 +13,9 @@ if (!defined('GIZMO_CONTENT_DIR')) define('GIZMO_CONTENT_DIR', 'content');
  */
 class FileSystemContent implements ContentFactory
 {
-	public function getAbstractContentTree($path = NULL) {
-		$default = folder([dirname($_SERVER['SCRIPT_FILENAME']), GIZMO_CONTENT_DIR]);
-		return new FSDir(($path ? $path : $default));
+	public function getAbstractContentTree($virtual_path = NULL) {
+		$base_path = new Path(folder([dirname($_SERVER['SCRIPT_FILENAME']), GIZMO_CONTENT_DIR]));
+		return new FSDir($virtual_path ? $base_path->plus(new Path($virtual_path)) : $base_path);
 	}
 }
 
@@ -54,6 +57,12 @@ abstract class FSObject implements ContentObject
 	{
 		return ''; // TODO: add '/content' directory and use ugly name.
 	}
+
+	public function getCleanFilename()
+	{
+		// TODO: replace this with a parser
+		return preg_replace('/[^a-zA-Z0-9 -]/', '', pathinfo($this->getPath(),	PATHINFO_FILENAME));
+	}
 }
 
 
@@ -80,7 +89,7 @@ class FSDir extends FSObject implements ContentNode, \IteratorAggregate
 					$this->contents[$file_info->getFilename()] = new FSFile($file_info);
 				}
 			}
-			// ksort($this->contents);
+			ksort($this->contents);
 			// echo '<pre>'; var_dump($this->contents); echo '</pre>';
 		}
 		catch (Exception $e) {
@@ -94,7 +103,7 @@ class FSDir extends FSObject implements ContentNode, \IteratorAggregate
 	}
 
 	function getExtension() {
-		return \pathinfo($this->getPath(), PATHINFO_EXTENSION);
+		return pathinfo($this->getPath(), PATHINFO_EXTENSION);
 	}
 
 	public function accept(ContentRenderable $renderable)
@@ -134,6 +143,12 @@ class FSFile extends FSObject implements ContentLeaf
 		return $this->info->getExtension();
 	}
 
+	public function getDirectUrl()
+	{
+
+		return str_replace(WebGizmo::singleton()->getRoot(), '', $this->getPath());
+	}
+
 	public function accept(ContentRenderable $renderable) {
 		return $renderable->visitFile($this);
 	}
@@ -143,6 +158,3 @@ class FSFile extends FSObject implements ContentLeaf
 		return file_get_contents($this->getPath());
 	}
 }
-
-
-?>
