@@ -22,5 +22,7 @@
     <footer>
       <?php $this->insert('partials/footer') ?>
     </footer>
+
+    <?php $this->insert('partials/javascript') ?>
   </body>
 </html>
