@@ -12,10 +12,10 @@ class XmlRenderable extends ContentRenderable
 
 	public function render(FSDir $root_node, $virtual_path = '')
 	{
-		return $this->visitDir($root_node);
+		return $this->visitNode($root_node);
 	}
 
-	public function visitDir(FSDir $node)
+	public function visitNode(FSDir $node)
 	{
 		$children = array();
 
@@ -26,7 +26,7 @@ class XmlRenderable extends ContentRenderable
 		return '<dir name="' . $node->getFilename() . '">' . implode("\n", $children) . '</dir>';
 	}
 
-	public function visitFile(FSFile $leaf)
+	public function visitLeaf(FSFile $leaf)
 	{
 		return '<file>' . $leaf->getFilename . '</file>';
 	}

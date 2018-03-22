@@ -47,12 +47,7 @@ class WebGizmo
 		parse_str($_SERVER['QUERY_STRING'], $query);
 		$this->virtual_path = array_key_exists('p', $query) ? $query['p'] : '';
 
-		// TODO: handle 404s i.e. create a 
-		try {
-			$this->content = $source->getAbstractContentTree($this->virtual_path);
-		} catch (gizmo\NotFoundException $e) {
-			return '<h1>404 :(</h1>' . $e->getMessage();
-		}
+		$this->content = $source->getAbstractContentTree();
 
 		self::$instance = $this;
 	}
@@ -102,7 +97,12 @@ class WebGizmo
 	}
 
 	public function render() {
-		return $this->renderable->render($this->content, $this->virtual_path);
+		// TODO: handle 404s i.e. create a 
+		try {
+			return $this->renderable->render($this->content, $this->virtual_path);
+		} catch (gizmo\NotFoundException $e) {
+			return '<h1>404 :(</h1><p>' . $e->getMessage() .'</p>';
+		}
 	}
 }
 ?>

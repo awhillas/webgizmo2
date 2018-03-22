@@ -8,10 +8,10 @@ class JsonRenderable extends ContentRenderable
 {
 	public function render(FSDir $root_node)
 	{
-		return $this->visitDir($root_node);
+		return $this->visitNode($root_node);
 	}
 
-	public function visitDir(FSDir $node)
+	public function visitNode(FSDir $node)
 	{
 		$children = [];
 		foreach($node as $file_name => $sub_node) {
@@ -26,7 +26,7 @@ class JsonRenderable extends ContentRenderable
 		}';
 	}
 
-	public function visitFile(FSFile $leaf)
+	public function visitLeaf(FSFile $leaf)
 	{
 		return '{ "name": "' . $this->getFilename() . '" }';
 	}

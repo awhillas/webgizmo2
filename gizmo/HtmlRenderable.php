@@ -8,6 +8,7 @@ if (!defined('GIZMO_WEBSITE_TITLE')) define('GIZMO_WEBSITE_TITLE', 'Untitled web
 
 /**
  * Theme manager/wrapper
+ * Mainly to handle the theme config.
  */
 class Theme
 {
@@ -33,7 +34,11 @@ class Theme
 			return false;
 		}
 	}
-
+	/**
+	 * Template inheritance.
+	 * Reads the config file to check if this theme inherits from another and for that theme etc.
+	 * @return Array	Paths to parent themes. 
+	 */
 	// private function getFolders($theme_name)
 	// {
 	// 	$theme = new Theme($theme_name, $this->root);
@@ -81,7 +86,7 @@ class HtmlRenderable implements ContentRenderable
 
 	public function render(FSDir $root_node)
 	{
-		$content = $this->visitDir($root_node);
+		$content = $this->visitNode($root_node);
 		$what = [
 			'content' => $content,
 			'title' => GIZMO_WEBSITE_TITLE, // TODO: from file name + site config?
@@ -91,7 +96,7 @@ class HtmlRenderable implements ContentRenderable
 		return $this->template_engine->render('default', $what);
 	}
 
-	public function visitDir(FSDir $node)
+	public function visitNode(FSDir $node)
 	{
 		$extension = $node->getExtension();
 		$children = [];
@@ -114,7 +119,7 @@ class HtmlRenderable implements ContentRenderable
 		return $this->renderTemplateIfExists($partial_templates, $context);
 	}
 
-	public function visitFile(FSFile $leaf)
+	public function visitLeaf(FSFile $leaf)
 	{
 		// TODO: rewrite this switch as an Abstract Factory
 		switch($leaf->getExtension()) {
@@ -126,6 +131,7 @@ class HtmlRenderable implements ContentRenderable
 			case 'jpeg':
 			case 'gif':
 			case 'png':
+			case 'svg':
 				return $this->renderImage($leaf);
 			default:
 				return 'FSFile:' . $leaf->getPath() . "<strong>" . $leaf->getFilename() . "</strong>";

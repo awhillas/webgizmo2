@@ -26,15 +26,12 @@ interface ContentRenderable
 	 *
 	 * @return string The node and child nodes rendered in the format as a string
 	 */
-	public function visitDir(FSDir $node);
+	public function visitNode(FSDir $node);
 
 	/**
 	 * The other Visitor pattern required methods
 	 *
 	 * @return string The leaf node rendered in the format as a string.
 	 */
-	public function visitFile(FSFile $leaf);
+	public function visitLeaf(FSFile $leaf);
 }
-
-
-?>

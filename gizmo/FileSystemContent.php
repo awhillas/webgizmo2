@@ -13,9 +13,12 @@ if (!defined('GIZMO_CONTENT_DIR')) define('GIZMO_CONTENT_DIR', 'content');
  */
 class FileSystemContent implements ContentFactory
 {
-	public function getAbstractContentTree($virtual_path = NULL) {
+	/**
+	 * @param path_append	to be appended to the base content path i.e. langauge code 'en', 'de' etc.
+	 */
+	public function getAbstractContentTree($path_append = NULL) {
 		$base_path = new Path(folder([dirname($_SERVER['SCRIPT_FILENAME']), GIZMO_CONTENT_DIR]));
-		return new FSDir($virtual_path ? $base_path->plus(new Path($virtual_path)) : $base_path);
+		return new FSDir($path_append ? $base_path->plus(new Path($path_append)) : $base_path);
 	}
 }
 
@@ -108,7 +111,7 @@ class FSDir extends FSObject implements ContentNode, \IteratorAggregate
 
 	public function accept(ContentRenderable $renderable)
 	{
-		return $renderable->visitDir($this);
+		return $renderable->visitNode($this);
 	}
 }
 
@@ -150,7 +153,7 @@ class FSFile extends FSObject implements ContentLeaf
 	}
 
 	public function accept(ContentRenderable $renderable) {
-		return $renderable->visitFile($this);
+		return $renderable->visitLeaf($this);
 	}
 
 	public function getContents()
