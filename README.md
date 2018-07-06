@@ -9,3 +9,7 @@ Need to have Composer, the PHP package manager, installed
 then
 
     composer install
+
+## Run tests
+
+    ./vendor/bin/peridot test

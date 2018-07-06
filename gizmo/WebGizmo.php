@@ -47,7 +47,12 @@ class WebGizmo
 		parse_str($_SERVER['QUERY_STRING'], $query);
 		$this->virtual_path = array_key_exists('p', $query) ? $query['p'] : '';
 
-		$this->content = $source->getAbstractContentTree();
+		if($multi_lingual)
+			$this->content = $source->getAbstractContentTree($language);
+		else
+			$this->content = $source->getAbstractContentTree();
+
+		$this->finder = new PathFinder($this->content);
 
 		self::$instance = $this;
 	}
@@ -66,6 +71,9 @@ class WebGizmo
 		return self::$instance;
 	}
 
+	/**
+	 * Root from which Gizmo is serving from 
+	 */
 	public function getRoot()
 	{
 		return $this->root_dir;
@@ -97,11 +105,23 @@ class WebGizmo
 	}
 
 	public function render() {
-		// TODO: handle 404s i.e. create a 
-		try {
-			return $this->renderable->render($this->content, $this->virtual_path);
-		} catch (gizmo\NotFoundException $e) {
-			return '<h1>404 :(</h1><p>' . $e->getMessage() .'</p>';
+		// TODO: handle 404s i.e. convert the virtual path to a real path and check it exists.		
+		$node = ($this->virtual_path and $this->virtual_path !== '/') 
+			? $this->finder->find($this->virtual_path)
+			: $this->content
+		;
+		if($node) {
+			try {
+				return $this->renderable->render($node);
+			} catch (gizmo\NotFoundException $e) {
+				return '<h1>404 :(</h1><p>' . $e->getMessage() .'</p>';
+			} catch (Exception $e) {
+				return '<pre>'.$e->getMessage().'</pre>';
+			}
+		}
+		else 
+		{
+			return '<h1>Content not found (404 error) :(</h1><p>Cound not find path: <strong>' . $this->virtual_path .'</strong>?</p>';
 		}
 	}
 }

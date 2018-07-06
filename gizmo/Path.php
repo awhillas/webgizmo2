@@ -1,13 +1,17 @@
 <?php
 namespace gizmo;
 
+use Iterator;
+use Exception;
+
 /**
  * Class for doing Path math.
  * Immutable.
  */
-class Path
+class Path implements Iterator
 {
 	private $path;
+	private $position = 0; // For the iterator interface
 	public $is_absolute = false;
 
 	function __construct($path, $dir_seperator = DIRECTORY_SEPARATOR)
@@ -20,7 +24,7 @@ class Path
 			$this->path = Path::convert($path);
 		}
 		elseif (is_array($path))
-			$this->path = $path;
+			$this->path = array_values($path); // so always start index at 0
 		else
 			throw new Exception('Path expects ether a string or an Array, given: ' . gettype($path), 1);
 	}
@@ -35,9 +39,24 @@ class Path
 		return $this->path;
 	}
 
+	public function length()
+	{
+		return count($this->path);
+	}
+
 	function convert($path) # : Array
 	{
-		return array_filter(explode($this->ds, $path));
+		return array_values(array_filter(explode($this->ds, $path)));
+	}
+
+	function head()
+	{
+		return (count($this->path)) ? reset($this->path) : '';
+	}
+
+	function tail()
+	{
+		return (count($this->path)) ?  array_slice($this->path, -1)[0] : '';
 	}
 	
 	/**
@@ -49,10 +68,71 @@ class Path
 		$new->is_absolute = $this->is_absolute;
 		return $new;
 	}
+
+	/**
+	 * Remove the given head (prefix) path from this path.
+	 * If this path is not prefixed by the $head then trigger a warning
+	 */
+	public function decapitate(Path $head)
+	{
+		if ($this->isPrefix($head))
+			return new Path(array_slice($this->path, $head->length()));
+		else
+			trigger_error((string)$head." is not a prefix of ".(string)$this." :(", E_USER_WARNING);
+	}
+
+	/**
+	 * Check if the given Path is a prefix	to this Path.
+	 */
+	function isPrefix(Path $prefix)
+	{
+		if ($this->length() < $prefix->length())
+			return false;
+
+		$prefix->rewind();
+		$this->rewind();
+
+		while ($prefix->valid())
+		{
+			if($prefix->current() !== $this->current())
+				return false;
+			
+			$prefix->next();
+			$this->next();
+		}
+		return true;
+	}
 	
 	public function append(string $path)
 	{
 		// Coz we're trying to be functional as much as possible we don't mutate.
 		return new Path($this->plus($this->convert($path)));
 	}
+
+	public function shift()
+	{
+		return new Path(array_slice($this->path, 1));
+	}	
+
+	// Iterator interface - - - - - - - - - - //
+
+    public function rewind() {
+        $this->position = 0;
+    }
+
+    public function current() {
+        return $this->path[$this->position];
+    }
+
+    public function key() {
+        return $this->position;
+    }
+
+    public function next() {
+        ++$this->position;
+    }
+
+    public function valid() {
+        return isset($this->path[$this->position]);
+    }	
 }

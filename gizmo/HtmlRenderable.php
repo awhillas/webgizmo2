@@ -63,7 +63,7 @@ class Theme
 /**
  * HTML Content Renderable
  *
- * Visitor design pattern that recuriscly dedends over the Abstract Content Tree
+ * Visitor design pattern that recursively transverses the Abstract Content Tree
  * and renders each Node/Leaf.
  */
 class HtmlRenderable implements ContentRenderable

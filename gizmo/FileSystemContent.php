@@ -3,6 +3,8 @@ namespace gizmo;
 
 use pathinfo;
 use Exception;
+use IteratorAggregate;
+use ArrayIterator;
 
 
 if (!defined('GIZMO_CONTENT_DIR')) define('GIZMO_CONTENT_DIR', 'content');
@@ -41,7 +43,7 @@ abstract class FSObject implements ContentObject
 
 	public function __toString()
 	{
-		return $this->path;
+		return (string)$this->path;
 	}
 
 	abstract public function accept(ContentRenderable $renderable);
@@ -49,11 +51,6 @@ abstract class FSObject implements ContentObject
 	public function getPath()
 	{
 		return $this->path;
-	}
-
-	public function getVirtualUrl()
-	{
-		return ''; // TODO: convert real (ugly) file name to virtual filename.
 	}
 
 	public function getDirectUrl()
@@ -72,7 +69,7 @@ abstract class FSObject implements ContentObject
 /**
  * Local Directory
  */
-class FSDir extends FSObject implements ContentNode, \IteratorAggregate
+class FSDir extends FSObject implements ContentNode, IteratorAggregate
 {
 	private $contents = [];
 
@@ -102,7 +99,12 @@ class FSDir extends FSObject implements ContentNode, \IteratorAggregate
 
 	public function getIterator()
 	{
-			return new \ArrayIterator($this->contents);
+		return new ArrayIterator($this->contents);
+	}
+
+	public function childCount()
+	{
+		return count($this->contents);
 	}
 
 	function getExtension() {
@@ -148,7 +150,6 @@ class FSFile extends FSObject implements ContentLeaf
 
 	public function getDirectUrl()
 	{
-
 		return str_replace(WebGizmo::singleton()->getRoot(), '', $this->getPath());
 	}
 
