@@ -10,10 +10,6 @@ use IteratorAggregate;
  */
 interface ContentNode extends ContentObject
 {
-    /**
-	 * How many children does the Node have?
-	 */
-	public function childCount();
 }
 
 ?>

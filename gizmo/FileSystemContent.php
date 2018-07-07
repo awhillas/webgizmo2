@@ -18,7 +18,8 @@ class FileSystemContent implements ContentFactory
 	/**
 	 * @param path_append	to be appended to the base content path i.e. langauge code 'en', 'de' etc.
 	 */
-	public function getAbstractContentTree($path_append = NULL) {
+	public function getAbstractContentTree($path_append = NULL) 
+	{
 		$base_path = new Path(folder([dirname($_SERVER['SCRIPT_FILENAME']), GIZMO_CONTENT_DIR]));
 		return new FSDir($path_append ? $base_path->plus(new Path($path_append)) : $base_path);
 	}
@@ -29,14 +30,16 @@ class FileSystemContent implements ContentFactory
  */
 abstract class FSObject implements ContentObject
 {
-	protected $path;
+	public $path;
 
 	function __construct($path)
 	{
-		if(file_exists($path)) {
+		if(file_exists($path)) 
+		{
 			$this->path = $path;
 		}
-		else {
+		else 
+		{
 			throw new Exception('Path does not exist?' . $path, 1);
 		}
 	}
@@ -78,12 +81,12 @@ class FSDir extends FSObject implements ContentNode, IteratorAggregate
 		try {
 			parent::__construct($path);
 
-			foreach (new \DirectoryIterator($this->path) as $file_info) {
+			foreach (new \DirectoryIterator((string)$this->path) as $file_info) {
 				if($file_info->isDot()) continue;
 				if($file_info->getFilename()[0] == '.') continue;
 
 				if ($file_info->isDir()) {
-					$this->contents[$file_info->getFilename()] = new FSDir($file_info->getRealPath());
+					$this->contents[$file_info->getFilename()] = new FSDir(new Path($file_info->getRealPath()));
 				}
 				else {
 					$this->contents[$file_info->getFilename()] = new FSFile($file_info);
@@ -137,14 +140,16 @@ class FSFile extends FSObject implements ContentLeaf
 
 	public function getPath()
 	{
-		return $this->info->getRealPath();
+		return new Path($this->info->getRealPath());
 	}
 
-	function getFilename() {
+	function getFilename() 
+	{
 		return $this->info->getFilename();
 	}
 
-	function getExtension() {
+	function getExtension() 
+	{
 		return $this->info->getExtension();
 	}
 
@@ -153,7 +158,8 @@ class FSFile extends FSObject implements ContentLeaf
 		return str_replace(WebGizmo::singleton()->getRoot(), '', $this->getPath());
 	}
 
-	public function accept(ContentRenderable $renderable) {
+	public function accept(ContentRenderable $renderable) 
+	{
 		return $renderable->visitLeaf($this);
 	}
 
@@ -161,4 +167,10 @@ class FSFile extends FSObject implements ContentLeaf
 	{
 		return file_get_contents($this->getPath());
 	}
+
+	public function childCount()
+	{
+		return 0;
+	}
+
 }

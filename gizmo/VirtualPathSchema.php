@@ -16,7 +16,7 @@ class VirtualPathSchema
     /**
      * Convert a real path to the virtual schema path
      */
-    public function translate(Path $path)
+    public function convert(Path $path)
     {
         $path = (!is_null($this->prefix))? $path->decapitate($this->prefix) : $path;
 

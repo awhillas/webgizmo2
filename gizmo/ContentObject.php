@@ -15,6 +15,7 @@ interface ContentObject
 	/**
 	 * Getter for the _real_ path (Readonly, private propeerty) which might be a
 	 * local or remote path to the resource from Gizmo's point of view.
+	 * Should return a Path object.
 	 */
 	public function getPath();
 
@@ -24,6 +25,11 @@ interface ContentObject
 	 * 'www.example.com/content/03_something.jpg'
 	 */
 	public function getDirectUrl();
+	
+    /**
+	 * How many children does the Node have?
+	 */
+	public function childCount();
 }
 
 ?>

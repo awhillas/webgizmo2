@@ -72,20 +72,21 @@ describe('Path Object', function(){
         assert($this->E->tail() === '', 'Expect E->tail() to equal ""');
     });
 
-    it('->isPrefix()', function(){
+    it('->hasPrefix()', function(){
         // True examples
-        // assert($this->A->isPrefix(new Path('road/to')), 'Expect A->isPrefix("road/to") to be true');
-        // assert($this->C->isPrefix(new Path('/here/is/an/absolute')), 'Expect C->isPrefix("/here/is/an/absolute") to be true');
-        // assert($this->E->isPrefix(new Path('')), 'Expect E->isPrefix("") to be true');
+        assert($this->A->hasPrefix(new Path('road/to')), 'Expect A->hasPrefix("road/to") to be true');
+        assert($this->A->hasPrefix($this->A), 'Expect A->hasPrefix(A) to be true');
+        assert($this->C->hasPrefix(new Path('/here/is/an/absolute')), 'Expect C->hasPrefix("/here/is/an/absolute") to be true');
+        assert($this->E->hasPrefix(new Path('')), 'Expect E->hasPrefix("") to be true');
         // False examples
-        // assert(!$this->A->isPrefix(new Path('to/')), 'Expect A->isPrefix("to/") to be false');
-        assert(!$this->C->isPrefix(new Path('/here/an/absolute')), 'Expect C->isPrefix("/here/an/absolute") to be false');
-        // assert(!$this->E->isPrefix(new Path('to/')), 'Expect E->isPrefix("to/") to be false');
+        assert(!$this->A->hasPrefix(new Path('to/')), 'Expect A->hasPrefix("to/") to be false');
+        assert(!$this->C->hasPrefix(new Path('/here/an/absolute')), 'Expect C->hasPrefix("/here/an/absolute") to be false');
+        assert(!$this->E->hasPrefix(new Path('to/')), 'Expect E->hasPrefix("to/") to be false');
     });
 
-    // it('->decapitate()', function(){
-    //     assert($this->A->decapitate(new Path('road/to'))->length() === 1, 'Expect A->decapitate("road/to")->length() === 1');
-    //     assert($this->C->decapitate(new Path('/here/is/an'))->length() === 2, 'Expect C->decapitate("/here/is/an/absolute")->length() === 2');
-    //     assert($this->E->decapitate($this->F)->length() === 0, 'Expect E->decapitate("")->length() === 0');
-    // });
+    it('->decapitate()', function(){
+        assert($this->A->decapitate(new Path('road/to'))->length() === 1, 'Expect A->decapitate("road/to")->length() === 1');
+        assert($this->C->decapitate(new Path('/here/is/an'))->length() === 2, 'Expect C->decapitate("/here/is/an/absolute")->length() === 2');
+        assert($this->E->decapitate($this->F)->length() === 0, 'Expect E->decapitate("")->length() === 0');
+    });
 });

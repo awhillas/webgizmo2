@@ -75,7 +75,7 @@ class Path implements Iterator
 	 */
 	public function decapitate(Path $head)
 	{
-		if ($this->isPrefix($head))
+		if ($this->hasPrefix($head))
 			return new Path(array_slice($this->path, $head->length()));
 		else
 			trigger_error((string)$head." is not a prefix of ".(string)$this." :(", E_USER_WARNING);
@@ -84,7 +84,7 @@ class Path implements Iterator
 	/**
 	 * Check if the given Path is a prefix	to this Path.
 	 */
-	function isPrefix(Path $prefix)
+	function hasPrefix(Path $prefix)
 	{
 		if ($this->length() < $prefix->length())
 			return false;
@@ -109,10 +109,18 @@ class Path implements Iterator
 		return new Path($this->plus($this->convert($path)));
 	}
 
+	/**
+	 * Path less the head
+	 */
 	public function shift()
 	{
 		return new Path(array_slice($this->path, 1));
-	}	
+	}
+
+	public function equals(Path $other)
+	{
+		return $this->path === $other->path;
+	}
 
 	// Iterator interface - - - - - - - - - - //
 
