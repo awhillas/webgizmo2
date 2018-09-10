@@ -60,7 +60,7 @@ class WebGizmo
 	/**
 	 * The singleton method
 	 * We're not a real Singelton as we don't instanciate if instane is not set.
-	 * We assume that WebGizmo is the first object to get instanciated and 
+	 * We assume that WebGizmo is the first object to get instanciated and
 	 * handles this in the __construct().
 	 */
 	public static function singleton()
@@ -72,7 +72,7 @@ class WebGizmo
 	}
 
 	/**
-	 * Root from which Gizmo is serving from 
+	 * Root from which Gizmo is serving from
 	 */
 	public function getRoot()
 	{
@@ -105,8 +105,8 @@ class WebGizmo
 	}
 
 	public function render() {
-		// TODO: handle 404s i.e. convert the virtual path to a real path and check it exists.		
-		$node = ($this->virtual_path and $this->virtual_path !== '/') 
+		// TODO: handle 404s i.e. convert the virtual path to a real path and check it exists.
+		$node = ($this->virtual_path and $this->virtual_path !== '/')
 			? $this->finder->find($this->virtual_path)
 			: $this->content
 		;
@@ -119,7 +119,7 @@ class WebGizmo
 				return '<pre>'.$e->getMessage().'</pre>';
 			}
 		}
-		else 
+		else
 		{
 			return '<h1>Content not found (404 error) :(</h1><p>Cound not find path: <strong>' . $this->virtual_path .'</strong>?</p>';
 		}

@@ -13,6 +13,7 @@ class Path implements Iterator
 	private $path;
 	private $position = 0; // For the iterator interface
 	public $is_absolute = false;
+	private $ds = DIRECTORY_SEPARATOR;
 
 	function __construct($path, $dir_seperator = DIRECTORY_SEPARATOR)
 	{
@@ -34,7 +35,7 @@ class Path implements Iterator
 		return ($this->is_absolute ? $this->ds : '') . implode($this->ds, $this->path);
 	}
 
-	public function getPath() # : Array	
+	public function getPath() # : Array
 	{
 		return $this->path;
 	}
@@ -58,7 +59,7 @@ class Path implements Iterator
 	{
 		return (count($this->path)) ?  array_slice($this->path, -1)[0] : '';
 	}
-	
+
 	/**
 	 * Append $path_fragment to the end of the path
 	 */
@@ -96,13 +97,13 @@ class Path implements Iterator
 		{
 			if($prefix->current() !== $this->current())
 				return false;
-			
+
 			$prefix->next();
 			$this->next();
 		}
 		return true;
 	}
-	
+
 	public function append(string $path)
 	{
 		// Coz we're trying to be functional as much as possible we don't mutate.
@@ -142,5 +143,5 @@ class Path implements Iterator
 
     public function valid() {
         return isset($this->path[$this->position]);
-    }	
+    }
 }
