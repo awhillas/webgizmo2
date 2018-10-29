@@ -13,7 +13,7 @@ interface ContentObject
 	public function accept(ContentRenderable $renderable);
 
 	/**
-	 * Getter for the _real_ path (Readonly, private propeerty) which might be a
+	 * Getter for the _real_ path (Readonly, private property) which might be a
 	 * local or remote path to the resource from Gizmo's point of view.
 	 * Should return a Path object.
 	 */
@@ -25,7 +25,7 @@ interface ContentObject
 	 * 'www.example.com/content/03_something.jpg'
 	 */
 	public function getDirectUrl();
-	
+
     /**
 	 * How many children does the Node have?
 	 */

@@ -2,7 +2,7 @@
 namespace gizmo;
 
 use Exception;
-
+use Negotiation;
 
 require_once('utils.php');
 
@@ -29,38 +29,38 @@ class WebGizmo
 
 	// constructor
 	public function __construct(
-		ContentFactory $content_source = null,
+		$fs_config,
 		RenderableFactory $renderable_factory = null,
 		$multi_lingual = GIZMO_MULTI_LINGUAL,
 		$language = GIZMO_LANGUAGE
 	) {
 		$this->root_dir = dirname($_SERVER['SCRIPT_FILENAME']);
 
-		$source = ($content_source ? $content_source : new FileSystemContent());
-
+		// Get the output render format
 		$renderable_factory = $renderable_factory
 			? $renderable_factory
 			: new DefaultRenderableFactory()
 		;
 		$this->renderable = $renderable_factory->getRenderable($this, $this->getMediaType());
 
+		// Which path is being requested
 		parse_str($_SERVER['QUERY_STRING'], $query);
 		$this->virtual_path = array_key_exists('p', $query) ? $query['p'] : '';
 
-		if($multi_lingual)
-			$this->content = $source->getAbstractContentTree($language);
-		else
-			$this->content = $source->getAbstractContentTree();
+		// Setup filesystem(s) content
+		// TODO: handle language string here somehow i.e. prepend to key in $fs_config?
+		$this->content = filesystems\FileSystemFactory::get($fs_config);
 
 		$this->finder = new PathFinder($this->content);
 
+		// Setup singlton
 		self::$instance = $this;
 	}
 
 	/**
 	 * The singleton method
 	 * We're not a real Singelton as we don't instanciate if instane is not set.
-	 * We assume that WebGizmo is the first object to get instanciated and 
+	 * We assume that WebGizmo is the first object to get instanciated and
 	 * handles this in the __construct().
 	 */
 	public static function singleton()
@@ -72,7 +72,7 @@ class WebGizmo
 	}
 
 	/**
-	 * Root from which Gizmo is serving from 
+	 * Root from which Gizmo is serving from
 	 */
 	public function getRoot()
 	{
@@ -84,7 +84,7 @@ class WebGizmo
 	 * @see  http://williamdurand.fr/Negotiation/
 	 */
 	public function getMediaType() {
-		$negotiator = new \Negotiation\Negotiator();
+		$negotiator = new Negotiation\Negotiator();
 		// TODO: make MediaType $priorities configurable
 		$priorities   = array('text/html', 'application/json', 'application/xml;q=0.5');
 		$mediaType = $negotiator->getBest($_SERVER['HTTP_ACCEPT'], $priorities);
@@ -96,7 +96,7 @@ class WebGizmo
 	 * @see  http://williamdurand.fr/Negotiation/
 	 */
 	public function getBestLanguage() {
-		$negotiator = new \Negotiation\LanguageNegotiator();
+		$negotiator = new Negotiation\LanguageNegotiator();
 		// TODO: make Language $priorities configurable
 		$priorities = array('en-au', 'en-gb', 'en');
 		$bestLanguage = $negotiator->getBest($_SERVER['HTTP_ACCEPT_LANGUAGE'], $priorities);
@@ -105,8 +105,8 @@ class WebGizmo
 	}
 
 	public function render() {
-		// TODO: handle 404s i.e. convert the virtual path to a real path and check it exists.		
-		$node = ($this->virtual_path and $this->virtual_path !== '/') 
+		// TODO: handle 404s i.e. convert the virtual path to a real path and check it exists.
+		$node = ($this->virtual_path and $this->virtual_path !== '/')
 			? $this->finder->find($this->virtual_path)
 			: $this->content
 		;
@@ -119,10 +119,9 @@ class WebGizmo
 				return '<pre>'.$e->getMessage().'</pre>';
 			}
 		}
-		else 
+		else
 		{
 			return '<h1>Content not found (404 error) :(</h1><p>Cound not find path: <strong>' . $this->virtual_path .'</strong>?</p>';
 		}
 	}
 }
-?>

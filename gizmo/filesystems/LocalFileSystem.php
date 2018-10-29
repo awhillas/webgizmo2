@@ -1,47 +1,54 @@
 <?php
-namespace gizmo;
+namespace gizmo\filesystems;
 
-use pathinfo;
-use Exception;
-use IteratorAggregate;
-use ArrayIterator;
+use \gizmo\ContentObject;
+use League\Flysystem\Filesystem;
+use League\Flysystem\Adapter\Local;
 
-
-if (!defined('GIZMO_CONTENT_DIR')) define('GIZMO_CONTENT_DIR', 'content');
-
-
-/**
- * File System abstract factory
- */
-class FileSystemContent implements ContentFactory
+class LocalFilesystem
 {
-	/**
-	 * @param path_append	to be appended to the base content path i.e. langauge code 'en', 'de' etc.
-	 */
-	public function getAbstractContentTree($path_append = NULL) // : ContentObject
+	public $fs;
+	public $root;
+	public $contents;
+
+	public function __construct($config)
 	{
-		$base_path = new Path(folder([dirname($_SERVER['SCRIPT_FILENAME']), GIZMO_CONTENT_DIR]));
-		return new FSDir($path_append ? $base_path->plus(new Path($path_append)) : $base_path);
+		$this->root = new Path($config['config']['root']);
+		var_dump($root);
+		$this->fs = new Filesystem(new Local($root));
+		$this->contents = $this->fs->listContents('/', true);
+		var_dump($this->content);
+		foreach($this->content as $fs_object)
+		{
+			switch($fs_object['type'])
+			{
+				case 'dir':
+					$obj = new FSDir($fs_object, $this);
+					break;
+				case 'file':
+					$obj = new FSFile($fs_object, $this);
+					break;
+				default:
+					// Throw a warning...?
+					break;
+			}
+		}
+		die();
 	}
 }
 
 /**
  * Abstract General Local FS Object
  */
-abstract class FSObject implements ContentLeaf
+abstract class FSObject implements ContentObject
 {
+	private $fs_object;
 	public $path;
 
-	function __construct($path)
+	function __construct($fs_object, LocalFilesystem $fs)
 	{
-		if(file_exists($path))
-		{
-			$this->path = $path;
-		}
-		else
-		{
-			throw new Exception('Path does not exist?' . $path, 1);
-		}
+		$this->fs_object = $fs_object;
+		$this->path  = new Path($fs_object['path']);
 	}
 
 	public function __toString()
@@ -68,7 +75,6 @@ abstract class FSObject implements ContentLeaf
 	}
 }
 
-
 /**
  * Local Directory
  */
@@ -76,27 +82,16 @@ class FSDir extends FSObject implements ContentNode, IteratorAggregate
 {
 	private $contents = [];
 
-	function __construct($path)
+	function __construct($fs_object, LocalFilesystem $fs)
 	{
-		try {
-			parent::__construct($path);
-
-			foreach (new \DirectoryIterator((string)$this->path) as $file_info) {
-				if($file_info->isDot()) continue;
-				if($file_info->getFilename()[0] == '.') continue;
-
-				if ($file_info->isDir()) {
-					$this->contents[$file_info->getFilename()] = new FSDir(new Path($file_info->getRealPath()));
-				}
-				else {
-					$this->contents[$file_info->getFilename()] = new FSFile($file_info);
-				}
+		parent::__construct($fs_object, $fs);
+		$this->contents = array();
+		foreach($fs->contents as $obj)
+		{
+			if ($obj['dirname'] == $fs_object['dirname'])
+			{
+				$this->contents;
 			}
-			ksort($this->contents);
-			// echo '<pre>'; var_dump($this->contents); echo '</pre>';
-		}
-		catch (Exception $e) {
-			echo '<pre>Caught exception: ',  $e->getMessage(), "</pre>";
 		}
 	}
 
@@ -119,7 +114,6 @@ class FSDir extends FSObject implements ContentNode, IteratorAggregate
 		return $renderable->visitNode($this);
 	}
 }
-
 
 /**
  * Local File
