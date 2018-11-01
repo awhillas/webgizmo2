@@ -37,7 +37,7 @@ class Theme
 	/**
 	 * Template inheritance.
 	 * Reads the config file to check if this theme inherits from another and for that theme etc.
-	 * @return Array	Paths to parent themes. 
+	 * @return Array	Paths to parent themes.
 	 */
 	// private function getFolders($theme_name)
 	// {
@@ -84,7 +84,7 @@ class HtmlRenderable implements ContentRenderable
 		return $theme->getEngine();
 	}
 
-	public function render(FSDir $root_node)
+	public function render(ContentNode $root_node)
 	{
 		$content = $this->visitNode($root_node);
 		$what = [
@@ -96,21 +96,23 @@ class HtmlRenderable implements ContentRenderable
 		return $this->template_engine->render('default', $what);
 	}
 
-	public function visitNode(FSDir $node)
+	public function visitNode(ContentNode $node)
 	{
-		$extension = $node->getExtension();
 		$children = [];
-
+		// echo "Node: ", get_class($node), " ", $node->childCount(), '<br>';
 		// Bulid up an array of rendered child nodes.
-		foreach($node as $file_name => $sub_node)
+		foreach($node as $path => $sub_node){
+			// echo "Sub node: $sub_node<br>";
 			if ($sub_node->getExtension())
+			// echo $sub_node->accept($this);
 				array_push($children, $sub_node->accept($this));  // Recurse
-
+		}
 		$context = array(
 			'content' => $node,
 			'children' => $children
 		);
 		// Use speical extension handler if one exists + default fall backs.
+		$extension = $node->getExtension();
 		$partial_templates = [
 			'partials/' . $extension,
 			'partials/default-folder',
@@ -119,7 +121,7 @@ class HtmlRenderable implements ContentRenderable
 		return $this->renderTemplateIfExists($partial_templates, $context);
 	}
 
-	public function visitLeaf(FSFile $leaf)
+	public function visitLeaf(ContentLeaf $leaf)
 	{
 		// TODO: rewrite this switch as an Abstract Factory
 		switch($leaf->getExtension()) {
@@ -134,7 +136,7 @@ class HtmlRenderable implements ContentRenderable
 			case 'svg':
 				return $this->renderImage($leaf);
 			default:
-				return 'FSFile:' . $leaf->getPath() . "<strong>" . $leaf->getFilename() . "</strong>";
+				return 'Content Leaf:' . $leaf->getPath() . "<strong>" . $leaf->getFilename() . "</strong>";
 		}
 	}
 
@@ -143,6 +145,7 @@ class HtmlRenderable implements ContentRenderable
 		foreach ($partial_templates as $template)
 			if ($this->template_engine->canHandle($template))
 				return $this->template_engine->render($template, $context);
+
 		return false;
 	}
 
@@ -153,7 +156,9 @@ class HtmlRenderable implements ContentRenderable
 
 	private function renderImage($file)
 	{
-		if ($html = $this->renderTemplateIfExists(['partials/image'], [ 'file' => $file ])) return $html;
+		$html = $html = $this->renderTemplateIfExists(['partials/image'], [ 'file' => $file ]);
+		if ($html)
+			return $html;
 		# Fall back to vanilla img tag
 		return '<img src="'.$file->getDirectUrl().'" alt="'.$file->getCleanFilename().'" class="WG__default_image" />';
 	}

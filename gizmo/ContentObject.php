@@ -8,7 +8,7 @@ namespace gizmo;
 interface ContentObject
 {
 	/**
-	 * The visited method of the Visitor design pattern
+	 * The visit method of the Visitor design pattern
 	 */
 	public function accept(ContentRenderable $renderable);
 
@@ -26,10 +26,20 @@ interface ContentObject
 	 */
 	public function getDirectUrl();
 
-    /**
+	/**
 	 * How many children does the Node have?
 	 */
 	public function childCount();
+
+	/**
+	 * The name of the file without all the Gizmo cruff, the pretty or display name.
+	 */
+	public function getCleanFilename();
+
+	/**
+	 * Return the extension of the system object i.e. everything after the last '.'
+	 */
+	public function getExtension();
 }
 
 ?>

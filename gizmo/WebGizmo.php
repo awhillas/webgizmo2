@@ -116,7 +116,7 @@ class WebGizmo
 			} catch (gizmo\NotFoundException $e) {
 				return '<h1>404 :(</h1><p>' . $e->getMessage() .'</p>';
 			} catch (Exception $e) {
-				return '<pre>'.$e->getMessage().'</pre>';
+				return '<h1>'.$e->getMessage().'</h1><pre>'.$e->getTraceAsString().'</pre>';
 			}
 		}
 		else

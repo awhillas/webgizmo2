@@ -150,7 +150,7 @@ class FSFile extends FSObject implements ContentLeaf
 
 	function getExtension()
 	{
-		return $this->info->getExtension();
+		return $this->info['extension'];
 	}
 
 	public function getDirectUrl()

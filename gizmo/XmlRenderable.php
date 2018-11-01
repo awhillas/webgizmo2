@@ -1,4 +1,5 @@
 <?php
+namespace gizmo;
 
 /**
  * Render Content Tree as XML
