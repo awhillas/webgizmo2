@@ -39,7 +39,7 @@ class FileSystemFactory
                 case 's3':
                     return new AwsS3Filesystem($config);
                 default:
-                    throw new UnknownFilesystem();
+                    throw new UnknownFilesystem("unknown file system given: type = ".$config['type']."? Valid types are 'local' or 's3'");
             }
     }
 }
