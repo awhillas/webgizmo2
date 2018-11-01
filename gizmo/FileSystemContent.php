@@ -11,14 +11,14 @@ if (!defined('GIZMO_CONTENT_DIR')) define('GIZMO_CONTENT_DIR', 'content');
 
 
 /**
- * Local File System abstract factory
+ * File System abstract factory
  */
 class FileSystemContent implements ContentFactory
 {
 	/**
 	 * @param path_append	to be appended to the base content path i.e. langauge code 'en', 'de' etc.
 	 */
-	public function getAbstractContentTree($path_append = NULL) 
+	public function getAbstractContentTree($path_append = NULL) // : ContentObject
 	{
 		$base_path = new Path(folder([dirname($_SERVER['SCRIPT_FILENAME']), GIZMO_CONTENT_DIR]));
 		return new FSDir($path_append ? $base_path->plus(new Path($path_append)) : $base_path);
@@ -28,17 +28,17 @@ class FileSystemContent implements ContentFactory
 /**
  * Abstract General Local FS Object
  */
-abstract class FSObject implements ContentObject
+abstract class FSObject implements ContentLeaf
 {
 	public $path;
 
 	function __construct($path)
 	{
-		if(file_exists($path)) 
+		if(file_exists($path))
 		{
 			$this->path = $path;
 		}
-		else 
+		else
 		{
 			throw new Exception('Path does not exist?' . $path, 1);
 		}
@@ -143,14 +143,14 @@ class FSFile extends FSObject implements ContentLeaf
 		return new Path($this->info->getRealPath());
 	}
 
-	function getFilename() 
+	function getFilename()
 	{
 		return $this->info->getFilename();
 	}
 
-	function getExtension() 
+	function getExtension()
 	{
-		return $this->info->getExtension();
+		return $this->info['extension'];
 	}
 
 	public function getDirectUrl()
@@ -158,7 +158,7 @@ class FSFile extends FSObject implements ContentLeaf
 		return str_replace(WebGizmo::singleton()->getRoot(), '', $this->getPath());
 	}
 
-	public function accept(ContentRenderable $renderable) 
+	public function accept(ContentRenderable $renderable)
 	{
 		return $renderable->visitLeaf($this);
 	}

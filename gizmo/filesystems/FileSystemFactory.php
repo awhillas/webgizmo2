@@ -1,16 +1,46 @@
 <?php
-namespace gizmo;
+namespace gizmo\filesystems;
 
-class FileSystemFactory {
-    public function getFileSystem($fs_type = 'local', $config = array()) {
-        switch ($fs_type) {
-            case 'local':
-                return new gizmo\filesystem\LocalFilesystem($config);
-            case 's3':
-                return new gizmo\filesystem\AwsS3Filesystem($config);
-            default:
-                throw new gizmo\UnknownFilesystem();
+use Exception;
+
+/*
+    $fs_config = array(
+        '/path/to/map/to => [
+            'type' => 'local',
+            'config'=> [
+                'root' => 'content'
+            ]
+        ],
+        '/local/path/ie/content' => {
+            'type' => 's3',
+            'config' => [
+                'bucket' => 'your-bucket-name',
+                'prefix' => 'optional/path/prefix',
+                'credentials' => [
+                    'credentials' => [
+                        'key'    => 'your-key',
+                        'secret' => 'your-secret',
+                    ],
+                    'region' => 'your-region',
+                    'version' => 'latest|version',
+                ]
+            ]
         }
+    )
+*/
+class FileSystemFactory
+{
+    public static function get($fs_config = array())
+    {
+        foreach ($fs_config as $local_path => $config)
+            switch ($config['type']) {
+                case 'local':
+                    return new LocalFilesystem($config);
+                case 's3':
+                    return new AwsS3Filesystem($config);
+                default:
+                    throw new UnknownFilesystem("unknown file system given: type = ".$config['type']."? Valid types are 'local' or 's3'");
+            }
     }
 }
 

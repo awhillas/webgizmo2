@@ -2,7 +2,7 @@
 namespace gizmo;
 
 use Exception;
-
+use Negotiation;
 
 require_once('utils.php');
 
@@ -29,31 +29,31 @@ class WebGizmo
 
 	// constructor
 	public function __construct(
-		ContentFactory $content_source = null,
+		$fs_config,
 		RenderableFactory $renderable_factory = null,
 		$multi_lingual = GIZMO_MULTI_LINGUAL,
 		$language = GIZMO_LANGUAGE
 	) {
 		$this->root_dir = dirname($_SERVER['SCRIPT_FILENAME']);
 
-		$source = ($content_source ? $content_source : new FileSystemContent());
-
+		// Get the output render format
 		$renderable_factory = $renderable_factory
 			? $renderable_factory
 			: new DefaultRenderableFactory()
 		;
 		$this->renderable = $renderable_factory->getRenderable($this, $this->getMediaType());
 
+		// Which path is being requested
 		parse_str($_SERVER['QUERY_STRING'], $query);
 		$this->virtual_path = array_key_exists('p', $query) ? $query['p'] : '';
 
-		if($multi_lingual)
-			$this->content = $source->getAbstractContentTree($language);
-		else
-			$this->content = $source->getAbstractContentTree();
+		// Setup filesystem(s) content
+		// TODO: handle language string here somehow i.e. prepend to key in $fs_config?
+		$this->content = filesystems\FileSystemFactory::get($fs_config);
 
 		$this->finder = new PathFinder($this->content);
 
+		// Setup singlton
 		self::$instance = $this;
 	}
 
@@ -84,7 +84,7 @@ class WebGizmo
 	 * @see  http://williamdurand.fr/Negotiation/
 	 */
 	public function getMediaType() {
-		$negotiator = new \Negotiation\Negotiator();
+		$negotiator = new Negotiation\Negotiator();
 		// TODO: make MediaType $priorities configurable
 		$priorities   = array('text/html', 'application/json', 'application/xml;q=0.5');
 		$mediaType = $negotiator->getBest($_SERVER['HTTP_ACCEPT'], $priorities);
@@ -96,7 +96,7 @@ class WebGizmo
 	 * @see  http://williamdurand.fr/Negotiation/
 	 */
 	public function getBestLanguage() {
-		$negotiator = new \Negotiation\LanguageNegotiator();
+		$negotiator = new Negotiation\LanguageNegotiator();
 		// TODO: make Language $priorities configurable
 		$priorities = array('en-au', 'en-gb', 'en');
 		$bestLanguage = $negotiator->getBest($_SERVER['HTTP_ACCEPT_LANGUAGE'], $priorities);
@@ -116,7 +116,7 @@ class WebGizmo
 			} catch (gizmo\NotFoundException $e) {
 				return '<h1>404 :(</h1><p>' . $e->getMessage() .'</p>';
 			} catch (Exception $e) {
-				return '<pre>'.$e->getMessage().'</pre>';
+				return '<h1>'.$e->getMessage().'</h1><pre>'.$e->getTraceAsString().'</pre>';
 			}
 		}
 		else
@@ -125,4 +125,3 @@ class WebGizmo
 		}
 	}
 }
-?>

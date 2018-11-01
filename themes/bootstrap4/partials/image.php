@@ -1,1 +1,1 @@
-<img src="<?= $file->directUrl() ?>" alt="<?= $file->cleanFilename() ?>" class="img-fluid">
+<img src="<?= $file->getDirectUrl() ?>" alt="<?= $file->getCleanFilename() ?>" class="img-fluid">
