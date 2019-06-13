@@ -35,7 +35,7 @@ class FileSystemFactory
         foreach ($fs_config as $local_path => $config)
             switch ($config['type']) {
                 case 'local':
-                    return new LocalFilesystem($config);
+                    return new LocalFileSystem($config);
                 case 's3':
                     return new AwsS3Filesystem($config);
                 default:

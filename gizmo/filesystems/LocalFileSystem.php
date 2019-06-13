@@ -23,7 +23,7 @@ function dump($var) {
 	echo '</pre>';
 };
 
-class LocalFilesystem implements ContentNode, IteratorAggregate
+class LocalFileSystem implements ContentNode, IteratorAggregate
 {
 	public $contents;
 	public $fs;
