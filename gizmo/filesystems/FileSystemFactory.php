@@ -11,7 +11,7 @@ use Exception;
                 'root' => 'content'
             ]
         ],
-        '/local/path/ie/content' => {
+        '/local/path/ie/content' => [
             'type' => 's3',
             'config' => [
                 'bucket' => 'your-bucket-name',
@@ -25,7 +25,7 @@ use Exception;
                     'version' => 'latest|version',
                 ]
             ]
-        }
+        ]
     )
 */
 class FileSystemFactory
@@ -35,9 +35,9 @@ class FileSystemFactory
         foreach ($fs_config as $local_path => $config)
             switch ($config['type']) {
                 case 'local':
-                    return new LocalFileSystem($config);
+                    return new LocalFileSystem($config['config']);
                 case 's3':
-                    return new AwsS3Filesystem($config);
+                    return new AwsS3Filesystem($config['config']);
                 default:
                     throw new UnknownFilesystem("unknown file system given: type = ".$config['type']."? Valid types are 'local' or 's3'");
             }

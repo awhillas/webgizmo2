@@ -14,5 +14,5 @@ The simplest CMS in the world! A semi-static website generator.
 
 After git clone the project into the web servered folder, install the dependancies with:
 
-    composer install
+    composer install --no-dev
 

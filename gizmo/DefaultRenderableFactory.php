@@ -39,5 +39,4 @@ class DefaultRenderableFactory implements RenderableFactory
 		}
 	}
 }
-
- ?>
+?>

@@ -99,7 +99,6 @@ class HtmlRenderable implements ContentRenderable
 	public function visitNode(ContentNode $node)
 	{
 		$children = [];
-		// echo "Node: ", get_class($node), " ", $node->childCount(), '<br>';
 		// Bulid up an array of rendered child nodes.
 		foreach($node as $path => $sub_node){
 			// echo "Sub node: $sub_node<br>";
