@@ -4,8 +4,6 @@ namespace gizmo\filesystems;
 use IteratorAggregate;
 use ArrayIterator;
 
-use Aws\S3\S3Client;
-use League\Flysystem\AwsS3v3\AwsS3Adapter;
 use League\Flysystem\Filesystem;
 
 use gizmo\ContentLeaf;
@@ -18,9 +16,9 @@ use gizmo\util;
 /**
  * Factory for ContentNodes for FlySystem stuff
  */
-class AwsContentFactory
+class ContentFactory
 {
-    public static function get(array $details, AwsS3Filesystem $fs)
+    public static function get(array $details, FlySystemInterface $fs)
     {
         switch($details['type'])
         {
@@ -32,23 +30,19 @@ class AwsContentFactory
     }
 }
 
-class AwsS3Filesystem implements ContentNode, IteratorAggregate
+class FlySystemInterface implements ContentNode, IteratorAggregate
 {
-    public function __construct($config)
+    public function __construct(Filesystem $fs, string $root)
     {
-        // var_dump($config);
-
-        $this->config = $config;
-        $client = new S3Client($config);
-        $adapter = new AwsS3Adapter($client, $config['bucket'], $config['prefix']);
-        $this->fs = new Filesystem($adapter);
+        $this->root = new Path($root);
+        $this->fs = $fs;
 
         // Recursivly build up tree of FSObjects
 
         $this->contents = array();
         foreach ($this->fs->listContents($this->getPath()) as $key => $value) 
         {
-            $this->contents[] = AwsContentFactory::get($value, $this);
+                $this->contents[] = ContentFactory::get($value, $this);
         }
     }
     
@@ -64,7 +58,7 @@ class AwsS3Filesystem implements ContentNode, IteratorAggregate
 
     public function getPath() 
     {
-        return new Path($this->config['prefix']);
+        return $this->root;
     }
 
     public function getDirectUrl()
@@ -95,7 +89,7 @@ class AwsS3Filesystem implements ContentNode, IteratorAggregate
 
 abstract class FSObject implements ContentObject
 {
-    public function __construct(array $details, AwsS3Filesystem $fs)
+    public function __construct(array $details, FlySystemInterface $fs)
     {
         $this->details = $details;
         $this->fs = $fs;
@@ -131,7 +125,7 @@ abstract class FSObject implements ContentObject
 
 class Dir extends FSObject implements ContentNode, IteratorAggregate
 {
-    public function __construct(array $details, AwsS3Filesystem $fs)
+    public function __construct(array $details, FlySystemInterface $fs)
     {
         parent::__construct($details, $fs);
         // Recursivly build a tree of FSObjects
@@ -160,7 +154,7 @@ class Dir extends FSObject implements ContentNode, IteratorAggregate
 
 class File extends FSObject implements ContentLeaf
 {
-    public function __construct(array $details, AwsS3Filesystem $fs)
+    public function __construct(array $details, FlySystemInterface $fs)
     {
         $this->details = $details;
         $this->fs = $fs;
