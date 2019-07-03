@@ -1,4 +1,4 @@
 vendor/
 docs/
 composer.phar
-index.php
+.env
