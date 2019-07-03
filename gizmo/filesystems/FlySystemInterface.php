@@ -81,9 +81,16 @@ class FlySystemInterface implements ContentNode, IteratorAggregate
         return '';
     } 
 
+    // These functions are just interfaces to the Filesystem object
+
     public function read($path)
     {
         return $this->fs->read($path);
+    }
+
+    public function listContents($path)
+    {
+        return $this->fs->listContents($path);
     }
 }
 
@@ -93,11 +100,6 @@ abstract class FSObject implements ContentObject
     {
         $this->details = $details;
         $this->fs = $fs;
-    }
-
-    public function accept(ContentRenderable $renderable)
-    {
-        return $renderable->visitNode($this);
     }
 
     public function getPath(): Path
@@ -117,8 +119,7 @@ abstract class FSObject implements ContentObject
 
     public function getExtension(): string
     {
-        $ext = pathinfo($this->getPath())['extension'];
-        return $ext ? $ext : '';
+        return $this->getPath()->getExtension();
     }
 }
 
@@ -130,10 +131,20 @@ class Dir extends FSObject implements ContentNode, IteratorAggregate
         parent::__construct($details, $fs);
         // Recursivly build a tree of FSObjects
         $this->contents = array();
-        foreach ($this->fs->fs->listContents($this->getPath()) as $key => $value) 
+        foreach ($this->fs->listContents($this->getPath()) as $key => $value) 
         {
-            //$this->contents[] = AwsContentFactory::get($value, $this->fs);
+            $this->contents[] = ContentFactory::get($value, $this->fs);
         }
+    }
+
+    public function __toString()
+    {
+        return "Dir: " . $this->getPath() . " ({$this->getPath()->getExtension()})";
+    }
+
+    public function accept(ContentRenderable $renderable)
+    {
+        return $renderable->visitNode($this);
     }
 
     public function getDirectUrl(): string
@@ -141,6 +152,10 @@ class Dir extends FSObject implements ContentNode, IteratorAggregate
         return "?p={$this->details['path']}";  // ???
     }
 
+    /**
+     * Iterate over the folders children.
+     * Impliment the IteratorAggregate interface.
+     */
     public function getIterator()
     {
         return new ArrayIterator($this->contents);
@@ -160,10 +175,22 @@ class File extends FSObject implements ContentLeaf
         $this->fs = $fs;
     }
 
+    public function __toString()
+    {
+        return "File: " . $this->getFilename();
+    }
+
+    
+    public function accept(ContentRenderable $renderable)
+	{
+		return $renderable->visitLeaf($this);
+    }
+    
 	/**
 	 * URL to directly server the file using the webserver
 	 * e.g. '/path/to/public_html/content/03_something.jpg' would be served as:
 	 * 'www.example.com/content/03_something.jpg'
+     * TODO: this is S3 specific, needs to be passed into the constructor.
 	 */
     public function getDirectUrl()
     {
@@ -185,11 +212,6 @@ class File extends FSObject implements ContentLeaf
         return $this->details['filename'];
     }
 
-    public function accept(ContentRenderable $renderable)
-	{
-		return $renderable->visitLeaf($this);
-    }
-    
     public function getContents(): string
     {
         return $this->fs->read($this->getPath());

@@ -2,6 +2,7 @@
 namespace gizmo\filesystems;
 
 use Aws\S3\S3Client;
+use League\Flysystem\Adapter\Local;
 use League\Flysystem\AwsS3v3\AwsS3Adapter;
 use League\Flysystem\Filesystem;
 use Spatie\Dropbox\Client as DropboxClient;
@@ -29,10 +30,15 @@ class FileSystemFactory
                     break;
                 case 'local':
                 default:
-                    // TODO: should default to local
                     // throw new UnknownFilesystem("unknown file system given: type = ".$flyconfig['type']."? Valid types are 'local' or 's3'");
-                    $config = [ 'prefix' => '' ];
-                    $adapter = new Local(__DIR__.'/content');
+                    if (!array_key_exists('root', $config)) {
+                        list($scriptPath) = get_included_files();
+                        $config['root'] = dirname($scriptPath);
+                    }
+                    if (!array_key_exists('prefix', $config)) {
+                        $config['prefix'] = '/content';
+                    }
+                    $adapter = new Local($config['root']);
                     $filesystem = new Filesystem($adapter);
             }
             return new FlySystemInterface($filesystem, $config['prefix']);
@@ -43,13 +49,14 @@ class UnknownFilesystem extends Exception { }
 
 /* Examples for each file system
     $fs_config = array(
-        '/path/to/map/to => [
+        '/' => [
             'type' => 'local',
-            'config'=> [
-                'root' => 'content'
+            'config' => [ 
+                'root' => '',  // if not set assumes index.php's path
+                'prefix' => '/content' 
             ]
         ],
-        '/local/path/ie/content' => [
+        '/s3/content' => [
             'type' => 's3',
             'config' => [
                 'bucket' => 'your-bucket-name',
@@ -64,7 +71,7 @@ class UnknownFilesystem extends Exception { }
                 ]
             ]
         ],
-        '/local/dropbox/content' => [
+        '/dropbox/content' => [
             'type' => 'dropbox',
             'config' => [
                 'authorizationToken' => '1234567890etc',

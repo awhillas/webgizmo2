@@ -58,6 +58,18 @@ class Path implements Iterator
 	{
 		return (count($this->path)) ?  array_slice($this->path, -1)[0] : '';
 	}
+
+	function getExtension() {
+		if (strpos($this->tail(), '.'))
+		{
+			$extension = end(explode(".", $this->tail()));
+			return $extension ? $extension : false;
+		}
+		else 
+		{
+			return false;
+		}
+	}	
 	
 	/**
 	 * Append $path_fragment to the end of the path

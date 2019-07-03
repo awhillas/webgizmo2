@@ -92,7 +92,6 @@ class HtmlRenderable implements ContentRenderable
 			'title' => GIZMO_WEBSITE_TITLE, // TODO: from file name + site config?
 			'language' => $this->gizmo->getBestLanguage(),
 		];
-
 		return $this->template_engine->render('default', $what);
 	}
 
@@ -100,12 +99,10 @@ class HtmlRenderable implements ContentRenderable
 	{
 		$children = [];
 		// Bulid up an array of rendered child nodes.
-		foreach($node as $path => $sub_node){
-			// echo "Sub node: $sub_node<br>";
+		foreach($node as $path => $sub_node)
 			if ($sub_node->getExtension())
-			// echo $sub_node->accept($this);
 				array_push($children, $sub_node->accept($this));  // Recurse
-		}
+			
 		$context = array(
 			'content' => $node,
 			'children' => $children
@@ -155,7 +152,7 @@ class HtmlRenderable implements ContentRenderable
 
 	private function renderImage($file)
 	{
-		$html = $html = $this->renderTemplateIfExists(['partials/image'], [ 'file' => $file ]);
+		$html = $this->renderTemplateIfExists(['partials/image'], [ 'file' => $file ]);
 		if ($html)
 			return $html;
 		# Fall back to vanilla img tag

@@ -50,7 +50,7 @@ class WebGizmo
 		// Setup filesystem(s) content
 		// TODO: handle language string here somehow i.e. prepend to key in $fs_config?
 		$this->content = filesystems\FileSystemFactory::get($fs_config);
-
+		
 		$this->finder = new PathFinder($this->content);
 
 		// Setup singlton
