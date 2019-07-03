@@ -6,7 +6,7 @@ namespace gizmo;
  */
 interface ContentFactory
 {
-	public function getAbstractContentTree($path); // : ContentObject;
+	public function getAbstractContentTree(Path $path) : ContentObject;
 }
 
 ?>

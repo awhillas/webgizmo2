@@ -41,11 +41,71 @@ class FileSystemFactory
                     $adapter = new Local($config['root']);
                     $filesystem = new Filesystem($adapter);
             }
-            return new FlySystemInterface($filesystem, $config['prefix']);
+            $specifics = FileSystemSpecificsFactory::get($flyconfig['type'] );
+            return new FlySystemInterface($filesystem, $config['prefix'], $specifics);
     }
 }
 
 class UnknownFilesystem extends Exception { }
+
+class FileSystemSpecificsFactory
+{
+    public function get(string $filesystem_name): FileSystemSpecifics {
+        switch($filesystem_name)
+        {
+            case 's3':
+                return new AwsS3Specifics();
+            case 'dropbox':
+                return new DropboxSpecifics();
+            default:
+                return new LocalSpecifics();
+        }
+    }
+}
+
+
+interface FileSystemSpecifics 
+{
+    public function getDirectURL(File $fs_object): string;
+}
+
+
+class LocalSpecifics implements FileSystemSpecifics
+{
+    public function getDirectURL(File $obj): string 
+    {
+        return $obj->details['path'];
+    }
+}
+
+class AwsS3Specifics implements FileSystemSpecifics 
+{
+    public function getDirectURL(File $obj): string
+    {
+        return "http://{$obj->fs->config['bucket']}.s3.{$obj->fs->config['region']}.amazonaws.com/{$obj->details['path']}";
+    }
+}
+
+class DropboxSpecifics implements FileSystemSpecifics 
+{
+    public function __construct()
+    {
+        // Load the MIME map incase we need to encode binary/image files.
+        $string = file_get_contents(realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR.'mimetypes.json');
+        $this->mimes = json_decode($string, true);
+    }
+
+    public function getDirectURL(File $obj): string
+    {
+        $ext = $obj->getExtension();
+        $mime = (array_key_exists($ext, $this->mimes)) ? $this->mime[$ext] : 'application/octet-stream';
+        // We can't link directly to the image so we're going to embed it on the page :(
+        $encoded_data = base64_encode($obj->getContents());
+        return "data:$mime;base64,".$encoded_data;
+    }
+}
+
+// Some example config's for each file system
 
 /* Examples for each file system
     $fs_config = array(

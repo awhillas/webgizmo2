@@ -18,31 +18,32 @@ use gizmo\util;
  */
 class ContentFactory
 {
-    public static function get(array $details, FlySystemInterface $fs)
+    public static function get(array $details, FlySystemInterface $fs, FileSystemSpecifics $specifics)
     {
         switch($details['type'])
         {
             case 'dir':
-                return new Dir($details, $fs);
+                return new Dir($details, $fs, $specifics);
             case 'file':
-                return new File($details, $fs);
+                return new File($details, $fs, $specifics);
         }
     }
 }
 
 class FlySystemInterface implements ContentNode, IteratorAggregate
 {
-    public function __construct(Filesystem $fs, string $root)
+    public function __construct(Filesystem $fs, string $root, FileSystemSpecifics $specifics)
     {
         $this->root = new Path($root);
         $this->fs = $fs;
+        $this->specifics = $specifics;
 
         // Recursivly build up tree of FSObjects
 
         $this->contents = array();
         foreach ($this->fs->listContents($this->getPath()) as $key => $value) 
         {
-                $this->contents[] = ContentFactory::get($value, $this);
+                $this->contents[] = ContentFactory::get($value, $this, $specifics);
         }
     }
     
@@ -96,8 +97,9 @@ class FlySystemInterface implements ContentNode, IteratorAggregate
 
 abstract class FSObject implements ContentObject
 {
-    public function __construct(array $details, FlySystemInterface $fs)
+    public function __construct(array $details, FlySystemInterface $fs, FileSystemSpecifics $specifics)
     {
+        $this->specifics = $specifics;
         $this->details = $details;
         $this->fs = $fs;
     }
@@ -126,14 +128,14 @@ abstract class FSObject implements ContentObject
 
 class Dir extends FSObject implements ContentNode, IteratorAggregate
 {
-    public function __construct(array $details, FlySystemInterface $fs)
+    public function __construct(array $details, FlySystemInterface $fs, FileSystemSpecifics $specifics)
     {
-        parent::__construct($details, $fs);
+        parent::__construct($details, $fs, $specifics);
         // Recursivly build a tree of FSObjects
         $this->contents = array();
         foreach ($this->fs->listContents($this->getPath()) as $key => $value) 
         {
-            $this->contents[] = ContentFactory::get($value, $this->fs);
+            $this->contents[] = ContentFactory::get($value, $this->fs, $specifics);
         }
     }
 
@@ -169,12 +171,6 @@ class Dir extends FSObject implements ContentNode, IteratorAggregate
 
 class File extends FSObject implements ContentLeaf
 {
-    public function __construct(array $details, FlySystemInterface $fs)
-    {
-        $this->details = $details;
-        $this->fs = $fs;
-    }
-
     public function __toString()
     {
         return "File: " . $this->getFilename();
@@ -190,11 +186,11 @@ class File extends FSObject implements ContentLeaf
 	 * URL to directly server the file using the webserver
 	 * e.g. '/path/to/public_html/content/03_something.jpg' would be served as:
 	 * 'www.example.com/content/03_something.jpg'
-     * TODO: this is S3 specific, needs to be passed into the constructor.
+     * TODO: this is S3 specific, needs to be passed into the constructor. Dependancy injecttion!
 	 */
     public function getDirectUrl()
     {
-        return "http://{$this->fs->config['bucket']}.s3.{$this->fs->config['region']}.amazonaws.com/{$this->details['path']}";
+        return $this->specifics->getDirectUrl($this);
     }
 
     public function getFilename(): string
