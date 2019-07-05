@@ -39,11 +39,10 @@ class FlySystemInterface implements ContentNode, IteratorAggregate
         $this->specifics = $specifics;
 
         // Recursivly build up tree of FSObjects
-
         $this->contents = array();
         foreach ($this->fs->listContents($this->getPath()) as $key => $value) 
         {
-                $this->contents[] = ContentFactory::get($value, $this, $specifics);
+            $this->contents[] = ContentFactory::get($value, $this, $specifics);
         }
     }
     
