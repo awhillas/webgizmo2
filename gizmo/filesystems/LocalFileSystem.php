@@ -11,8 +11,8 @@ use League\Flysystem\Filesystem;
 use gizmo\ContentLeaf;
 use gizmo\ContentNode;
 use gizmo\ContentObject;
-use gizmo\ContentRenderable;
 use gizmo\Path;
+use gizmo\renderers\ContentRenderable;
 use gizmo\WebGizmo;
 
 

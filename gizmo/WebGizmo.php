@@ -3,6 +3,7 @@ namespace gizmo;
 
 use Exception;
 use Negotiation;
+use gizmo\renderers\RenderableFactory;
 
 require_once('utils.php');
 
@@ -23,25 +24,19 @@ class WebGizmo
 	// Requested content virtual path from query param.
 	private $virtual_path;
 	/**
-	 * Renderable of the content AST
+	 * Renderable of the content Abstract Content Tree (ACT)
 	 */
 	private $renderable;
 
 	// constructor
 	public function __construct(
 		$fs_config,
-		RenderableFactory $renderable_factory = null,
 		$multi_lingual = GIZMO_MULTI_LINGUAL,
 		$language = GIZMO_LANGUAGE
 	) {
 		$this->root_dir = dirname($_SERVER['SCRIPT_FILENAME']);
-
-		// Get the output render format
-		$renderable_factory = $renderable_factory
-			? $renderable_factory
-			: new DefaultRenderableFactory()
-		;
-		$this->renderable = $renderable_factory->getRenderable($this, $this->getMediaType());
+		
+		$this->renderable = RenderableFactory::get($this, $this->getMediaType());
 
 		// Which path is being requested
 		parse_str($_SERVER['QUERY_STRING'], $query);
@@ -53,14 +48,14 @@ class WebGizmo
 		
 		$this->finder = new PathFinder($this->content);
 
-		// Setup singlton
+		// Setup singleton
 		self::$instance = $this;
 	}
 
 	/**
 	 * The singleton method
-	 * We're not a real Singelton as we don't instanciate if instane is not set.
-	 * We assume that WebGizmo is the first object to get instanciated and
+	 * We're not a real Singelton as we don't instantiate if instance is not set.
+	 * We assume that WebGizmo is the first object to get instantiated and
 	 * handles this in the __construct().
 	 */
 	public static function singleton()

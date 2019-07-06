@@ -1,6 +1,7 @@
 <?php
 namespace gizmo;
 
+use gizmo\renderers\ContentRenderable;
 
 /**
  * Ether a file (leaf) or directory (node)

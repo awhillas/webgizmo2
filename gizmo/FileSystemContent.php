@@ -6,6 +6,8 @@ use Exception;
 use IteratorAggregate;
 use ArrayIterator;
 
+use gizmo\renderers\ContentRenderable;
+
 
 if (!defined('GIZMO_CONTENT_DIR')) define('GIZMO_CONTENT_DIR', 'content');
 

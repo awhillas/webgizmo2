@@ -1,21 +1,22 @@
 <?php
-namespace gizmo;
+namespace gizmo\renderers;
+
 
 /**
  * Renders the Content AST as JSON
  */
 class JsonRenderable extends ContentRenderable
 {
-	public function render(FSDir $root_node)
+	public function render(ContentNode $root_node)
 	{
 		return $this->visitNode($root_node);
 	}
 
-	public function visitNode(FSDir $node)
+	public function visitNode(ContentNode $node)
 	{
 		$children = [];
 		foreach($node as $file_name => $sub_node) {
-			$children .= $sub_node->accept($this);  // Recurse
+			$children .= $sub_node->accept($this);  // Recurs
 		}
 
 		return '{
@@ -26,7 +27,7 @@ class JsonRenderable extends ContentRenderable
 		}';
 	}
 
-	public function visitLeaf(FSFile $leaf)
+	public function visitLeaf(ContentLeaf $leaf)
 	{
 		return '{ "name": "' . $this->getFilename() . '" }';
 	}

@@ -1,10 +1,13 @@
 <?php
-namespace gizmo;
+namespace gizmo\renderers;
 
 use json_decode;
+use gizmo\WebGizmo;
+use gizmo\ContentNode;
+use gizmo\ContentLeaf;
 
 if (!defined('GIZMO_THEME')) define('GIZMO_THEME', 'default');
-if (!defined('GIZMO_WEBSITE_TITLE')) define('GIZMO_WEBSITE_TITLE', 'Untitled website');
+if (!defined('GIZMO_WEBSITE_TITLE')) define('GIZMO_WEBSITE_TITLE', 'Untitled WebGizmo website');
 
 /**
  * Theme manager/wrapper
@@ -36,7 +39,7 @@ class Theme
 	}
 	/**
 	 * Template inheritance.
-	 * Reads the config file to check if this theme inherits from another and for that theme etc.
+	 * Reads the configuration file to check if this theme inherits from another and for that theme etc.
 	 * @return Array	Paths to parent themes.
 	 */
 	// private function getFolders($theme_name)
@@ -98,16 +101,16 @@ class HtmlRenderable implements ContentRenderable
 	public function visitNode(ContentNode $node)
 	{
 		$children = [];
-		// Bulid up an array of rendered child nodes.
+		// Build up an array of rendered child nodes.
 		foreach($node as $path => $sub_node)
 			if ($sub_node->getExtension())
-				array_push($children, $sub_node->accept($this));  // Recurse
+				array_push($children, $sub_node->accept($this));  // Recurs
 			
 		$context = array(
 			'content' => $node,
 			'children' => $children
 		);
-		// Use speical extension handler if one exists + default fall backs.
+		// Use special extension handler if one exists + default fall backs.
 		$extension = $node->getExtension();
 		$partial_templates = [
 			'partials/' . $extension,
@@ -121,8 +124,11 @@ class HtmlRenderable implements ContentRenderable
 	{
 		// TODO: rewrite this switch as an Abstract Factory
 		switch($leaf->getExtension()) {
+			case 'htm':
 			case 'html':
 				return $this->renderHtml($leaf);
+			case 'markdown':
+			case 'mdown':
 			case 'md':
 				return $this->renderMarkdown($leaf);
 			case 'jpg':
@@ -132,6 +138,7 @@ class HtmlRenderable implements ContentRenderable
 			case 'svg':
 				return $this->renderImage($leaf);
 			default:
+				// TODO: Use an <object> tag and detect the mime based on the file extension.
 				return 'Content Leaf:' . $leaf->getPath() . "<strong>" . $leaf->getFilename() . "</strong>";
 		}
 	}
@@ -163,6 +170,5 @@ class HtmlRenderable implements ContentRenderable
 	{
 		return $file->getContents();
 	}
-
 }
 ?>
